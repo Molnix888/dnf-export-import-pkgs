@@ -1,12 +1,12 @@
 #!/bin/bash
 
 installedListToFileFunction () {
-    sudo dnf repoquery --installed | sort > $1 && echo "Package list successfully exported to $1." || echo "An error occured during operation."
+    dnf repoquery --installed | sort > $1 && echo "Package list successfully exported to $1." || echo "An error occured during operation."
 }
 
 helpFunction () {
-    echo "Usage: $0 -o option
-        -o Option of script usage. It can either be 'export' or 'import'."
+    echo "Usage: sudo $0 -o option
+    -o Option of script usage. It can either be 'export' or 'import'."
 
     exit 1
 }
@@ -44,10 +44,10 @@ importFunction () {
         diff=$(grep -Fxvf $expected $actual)
 
         # Removing pkgs from diff list
-        sudo dnf remove $diff
+        dnf remove $diff
 
         # Installing pkgs from expected list
-        sudo dnf install $(cat $expected)
+        dnf install $(cat $expected)
 
         # Deleting temp actual list file
         rm $actual && echo "$actual file successfully deleted." || echo "Can't delete $actual file."
@@ -57,6 +57,8 @@ importFunction () {
 
     exit 1
 }
+
+[[ $EUID -ne 0 ]] && echo "The script requires root privileges." && exit 1
 
 while getopts "o:" opt
 do
