@@ -21,7 +21,7 @@ exportFunction () {
     then
         echo "Empty file name provided."
     else
-        installedListToFileFunction "$filename.txt"
+        installedListToFileFunction "$filename-$(uuidgen).txt"
     fi
 
     exit 1
@@ -32,7 +32,7 @@ importFunction () {
 
     # Declaring variables for list files
     read expected
-    actual=temp.txt
+    actual=$(uuidgen).txt
 
     # Verifying if expected file exists, is readable and not empty
     if [[ -f "$expected" && -r "$expected" && -s "$expected" ]]
