@@ -1,7 +1,7 @@
 #!/bin/bash
 
 installedListToFileFunction () {
-    dnf repoquery --installed | sort > $1 && echo "Package list successfully exported to $1." || echo "An error occured during operation."
+    dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i > $1 && echo "Package list successfully exported to $1." || echo "An error occured during operation."
 }
 
 helpFunction () {
