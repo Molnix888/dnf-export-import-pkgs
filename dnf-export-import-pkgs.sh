@@ -1,7 +1,13 @@
 #!/bin/bash
 
 installedPkgsToFileFunction () {
-    dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i > $1 && echo "Package list successfully exported to $1." || echo "Error occured during export operation."
+    if [ -f "$1" ]
+    then
+        echo "File $1 already exists."
+        exit 1
+    else
+        dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i > $1 && echo "Package list successfully exported to $1." || echo "Error occured during export operation."
+    fi
 }
 
 helpFunction () {
@@ -18,13 +24,9 @@ exportFunction () {
 
     read name
 
-    # Verifying if input is valid
     if [ -z "$name" ]
     then
         echo "Empty filename provided."
-    elif [ -f "$name.txt" ]
-    then
-        echo "File with provided name already exists."
     else
         installedPkgsToFileFunction "$name.txt"
     fi
@@ -37,23 +39,18 @@ importFunction () {
 
     read expected
 
-    # Verifying if file exists, readable and not empty
     if [[ -f "$expected" && -r "$expected" && -s "$expected" ]]
     then
-        # Creating actual pkg list
         actual=$(uuidgen).txt
         installedPkgsToFileFunction $actual
 
         # Comparing pkg lists and returning only the lines absent in expected list
         toDelete=$(grep -Fxvf $expected $actual)
 
-        # Removing pkgs from diff list
         dnf remove $toDelete
 
-        # Installing pkgs from expected list
         dnf install $(cat $expected)
 
-        # Deleting temp file
         rm $actual && echo "$actual file successfully deleted." || echo "Can't delete $actual file."
     else
         echo "Provided file either not exists, not readable or is empty."
@@ -72,7 +69,6 @@ do
     esac
 done
 
-# Verifying provided option parameter
 if [ -z "$option" ]
 then
     echo "No parameters provided."
