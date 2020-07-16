@@ -11,7 +11,7 @@ installedPkgsToFileFunction() {
 helpFunction() {
     echo "Usage: sudo $0 [-o <export|import>]
 
-    Arguments:
+Arguments:
     export - Exports currently installed package names (without version and architecture) to plain text file.
     import - Imports package names from plain text file and installs exactly the same package set removing the ones not in the list."
 
