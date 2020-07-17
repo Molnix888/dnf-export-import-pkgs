@@ -40,7 +40,7 @@ importFunction() {
 
         dnf remove $toDelete
 
-        dnf install $(cat $expected)
+        dnf --setopt=install_weak_deps=False install $(cat $expected)
 
         rm $actual && echo "$actual file successfully deleted." || ( echo "Can't delete $actual file." && exit 1 )
     else
