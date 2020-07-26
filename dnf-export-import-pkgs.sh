@@ -4,7 +4,7 @@ installedPkgsToFileFunction() {
     if [ -f "$1" ]; then
         echo "File $1 already exists." && exit 1
     else
-        dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i > "$1" && echo "Package list successfully exported to $1." || ( echo "Error occured during export operation." && exit 1 )
+        dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i > "$1" && echo "Package list successfully exported to $1." || ( echo "Error occurred during export operation." && exit 1 )
     fi
 }
 
