@@ -9,38 +9,35 @@ installedPkgsToFileFunction() {
 }
 
 helpFunction() {
-    echo "Usage: sudo $0 [-o <export|import>]
+    echo "Usage: sudo $0 [-o <export|import>] [-p <arg...>]
 
-Arguments:
-    export - Exports names of installed packages (without version and architecture) to a plain text file.
-    import - Imports package names from plain text file and installs the same set of packages removing the ones not in the list."
+    -o  Operation to perform, can either be export or import.
+        export - Exports names of installed packages (without version and architecture) to a plain text file.
+        import - Imports package names from plain text file and installs the same set of packages removing the ones not in the list.
+
+    -p  Relative filepath, file shouldn't exist for export operation and should exist, be readable and not empty for import operation."
 
     exit 1
 }
 
 exportFunction() {
-    read -p "Specify filename for package list (without extension): " name
-
-    if [ -z "$name" ]; then
-        echo "Empty filename provided." && exit 1
+    if [ -z "$1" ]; then
+        echo "Empty filepath provided." && exit 1
     else
-        installedPkgsToFileFunction "$name.txt"
+        installedPkgsToFileFunction "$1"
     fi
 }
 
 importFunction() {
-    read -p "Specify path to file with package list to restore: " expected
-
-    if [ -f "$expected" ] && [ -r "$expected" ] && [ -s "$expected" ]; then
-        local actual=$(uuidgen).txt
+    if [ -f "$1" ] && [ -r "$1" ] && [ -s "$1" ]; then
+        local actual=$(uuidgen)
         installedPkgsToFileFunction "$actual"
 
-        # Comparing pkg lists and returning only the lines absent in expected list
-        local toDelete=$(grep -Fxvf "$expected" "$actual")
+        # Comparing pkg lists and returning only the lines absent in received list
+        local toDelete=$(grep -Fxvf "$1" "$actual")
 
         dnf remove "$toDelete"
-
-        dnf --setopt=install_weak_deps=False install $(cat "$expected")
+        dnf --setopt=install_weak_deps=False install $(cat "$1")
 
         rm "$actual" && echo "$actual file successfully deleted." || ( echo "Can't delete $actual file." && exit 1 )
     else
@@ -52,19 +49,20 @@ if [ $EUID -ne 0 ]; then
     echo "Script requires root privileges." && exit 1
 fi
 
-while getopts "o:" opt; do
+while getopts "o:p:" opt; do
     case "$opt" in
-        o ) arg="$OPTARG";;
+        o ) operation="$OPTARG";;
+        p ) path="$OPTARG";;
         ? ) helpFunction;;
     esac
 done
 
-if [ -z "$arg" ]; then
+if [ -z "$operation" ]; then
     helpFunction
-elif [ "$arg" = "export" ]; then
-    exportFunction
-elif [ "$arg" = "import" ]; then
-    importFunction
+elif [ "$operation" = "export" ]; then
+    exportFunction "$path"
+elif [ "$operation" = "import" ]; then
+    importFunction "$path"
 else
-    echo "Invalid argument." && helpFunction
+    echo "Invalid operation." && helpFunction
 fi
