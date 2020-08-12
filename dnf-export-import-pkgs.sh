@@ -22,7 +22,7 @@ helpFunction() {
 
 exportFunction() {
     if [ -z "$1" ]; then
-        echo "Empty filepath provided." && exit 1
+        echo "Empty filepath provided." && helpFunction
     else
         installedPkgsToFileFunction "$1"
     fi
@@ -41,7 +41,7 @@ importFunction() {
 
         rm "$actual" && echo "$actual file successfully deleted." || ( echo "Can't delete $actual file." && exit 1 )
     else
-        echo "File not exists, not readable or is empty." && exit 1
+        echo "File not exists, not readable or is empty." && helpFunction
     fi
 }
 
