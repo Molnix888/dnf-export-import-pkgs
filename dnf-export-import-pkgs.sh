@@ -11,11 +11,11 @@ installedPkgsToFileFunction() {
 helpFunction() {
     echo "Usage: sudo $0 [-o <export|import>] [-p <arg...>]
 
-    -o  Operation to perform, can either be export or import.
+-o  Operation to perform, can either be export or import:
         export - Exports names of installed packages (without version and architecture) to a plain text file.
         import - Imports package names from plain text file and installs the same set of packages removing the ones not in the list.
 
-    -p  Relative filepath, file shouldn't exist for export operation and should exist, be readable and not empty for import operation."
+-p  Relative filepath, file shouldn't exist for export operation and should exist, be readable and not empty for import operation."
 
     exit 1
 }
