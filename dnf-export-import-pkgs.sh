@@ -4,7 +4,7 @@ installedPkgsToFileFunction() {
     if [ -f "$1" ]; then
         echo "File $1 already exists." && exit 1
     else
-        dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i > "$1" && echo "Package list successfully exported to $1." || ( echo "Error occurred during export operation." && exit 1 )
+        (dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i > "$1" && echo "Package list successfully exported to $1.") || ( echo "Error occurred during export operation." && exit 1 )
     fi
 }
 
@@ -30,16 +30,18 @@ exportFunction() {
 
 importFunction() {
     if [ -f "$1" ] && [ -r "$1" ] && [ -s "$1" ]; then
-        local actual=$(uuidgen)
+        local actual
+        actual=$(uuidgen)
         installedPkgsToFileFunction "$actual"
 
         # Comparing pkg lists and returning only the lines absent in received list
-        local toDelete=$(grep -Fxvf "$1" "$actual")
+        local toDelete
+        toDelete=$(grep -Fxvf "$1" "$actual")
 
         dnf remove "$toDelete"
-        dnf --setopt=install_weak_deps=False install $(cat "$1")
+        dnf --setopt=install_weak_deps=False install "$(cat "$1")"
 
-        rm "$actual" && echo "$actual file successfully deleted." || ( echo "Can't delete $actual file." && exit 1 )
+        (rm "$actual" && echo "$actual file successfully deleted.") || ( echo "Error occurred during delete operation of $actual file." && exit 1 )
     else
         echo "File not exists, not readable or is empty." && helpFunction
     fi
