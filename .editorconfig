@@ -9,3 +9,7 @@ indent_style = space
 insert_final_newline = true
 tab_width = 4
 trim_trailing_whitespace = true
+
+# YAML Files
+[*.{yml,yaml}]
+indent_size = 2
