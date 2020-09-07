@@ -1,5 +1,7 @@
 # dnf-export-import-pkgs
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/501645720c33413c802bd9f6ce160dde)](https://app.codacy.com/manual/Molnix888/dnf-export-import-pkgs?utm_source=github.com&utm_medium=referral&utm_content=Molnix888/dnf-export-import-pkgs&utm_campaign=Badge_Grade_Dashboard)
+
 A script created to ease a process of restoring the same set of packages after system re-installation or for moving it to another system.
 
 It uses only package names and ignores versions during operations. It is recommended for import operation to use only files exported via this script.
