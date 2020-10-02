@@ -1,6 +1,6 @@
 # dnf-export-import-pkgs
 
-![CI](https://github.com/Molnix888/dnf-export-import-pkgs/workflows/CI/badge.svg) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/501645720c33413c802bd9f6ce160dde)](https://app.codacy.com/manual/Molnix888/dnf-export-import-pkgs?utm_source=github.com&utm_medium=referral&utm_content=Molnix888/dnf-export-import-pkgs&utm_campaign=Badge_Grade_Dashboard)
+![CI](https://github.com/Molnix888/dnf-export-import-pkgs/workflows/CI/badge.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/5d8d19737dba4ca6b98a3fc057f41ed5)](https://www.codacy.com/gh/Molnix888/dnf-export-import-pkgs)
 
 A script created to ease a process of restoring the same set of packages after system re-installation or for moving it to another system.
 
