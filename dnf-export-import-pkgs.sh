@@ -1,14 +1,6 @@
 #!/bin/bash
 
-installedPkgsToFileFunction() {
-    if [ -f "$1" ]; then
-        echo "File $1 already exists." && exit 1
-    else
-        (dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i >"$1" && echo "Package list successfully exported to $1.") || (echo "Error occurred during export operation to $1." && exit 1)
-    fi
-}
-
-helpFunction() {
+get_help() {
     echo "Usage: sudo $0 [-o <export|import>] [-p <arg...>]
 
 -o  Operation to perform, can either be export or import:
@@ -20,30 +12,38 @@ helpFunction() {
     exit 1
 }
 
-exportFunction() {
-    if [ -z "$1" ]; then
-        echo "Empty filepath provided." && helpFunction
+pkg_list_to_file() {
+    if [ -f "$1" ]; then
+        echo "File $1 already exists." && get_help
     else
-        installedPkgsToFileFunction "$1"
+        (dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i >"$1" && echo "Package list successfully exported to $1.") || (echo "Error occurred during export operation to $1." && exit 1)
     fi
 }
 
-importFunction() {
+export_pkgs() {
+    if [ -z "$1" ]; then
+        echo "Empty filepath provided." && get_help
+    else
+        pkg_list_to_file "$1"
+    fi
+}
+
+import_pkgs() {
     if [ -f "$1" ] && [ -r "$1" ] && [ -s "$1" ]; then
         local actual
         actual=$(uuidgen)
-        installedPkgsToFileFunction "$actual"
+        pkg_list_to_file "$actual"
 
         # Comparing pkg lists and returning only the lines absent in received list
-        local toDelete
-        toDelete=$(grep -Fxvf "$1" "$actual")
+        local to_delete
+        to_delete=$(grep -Fxvf "$1" "$actual")
 
-        dnf remove "$toDelete"
+        dnf remove "$to_delete"
         dnf --setopt=install_weak_deps=False install "$(cat "$1")"
 
         (rm "$actual" && echo "$actual file successfully deleted.") || (echo "Error occurred during delete operation of $actual file." && exit 1)
     else
-        echo "File not exists, not readable or is empty." && helpFunction
+        echo "File not exists, not readable or is empty." && get_help
     fi
 }
 
@@ -55,16 +55,16 @@ while getopts "o:p:" opt; do
     case "$opt" in
     o) operation="$OPTARG" ;;
     p) path="$OPTARG" ;;
-    ?) helpFunction ;;
+    ?) get_help ;;
     esac
 done
 
 if [ -z "$operation" ]; then
-    helpFunction
+    get_help
 elif [ "$operation" = "export" ]; then
-    exportFunction "$path"
+    export_pkgs "$path"
 elif [ "$operation" = "import" ]; then
-    importFunction "$path"
+    import_pkgs "$path"
 else
-    echo "Invalid operation." && helpFunction
+    echo "Invalid operation." && get_help
 fi
