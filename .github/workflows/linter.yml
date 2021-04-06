@@ -1,6 +1,10 @@
-name: CI
+name: Lint Code Base
 
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   lint:
@@ -8,7 +12,9 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Lint Code Base
-        uses: docker://ghcr.io/github/super-linter:latest
+        uses: github/super-linter@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
