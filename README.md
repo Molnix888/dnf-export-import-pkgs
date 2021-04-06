@@ -3,8 +3,8 @@
 A script created to ease a process of restoring the same set of packages after
 system re-installation or for moving it to another system.
 
-It uses package names and ignores versions during operations.
-It is recommended for import operation to use files exported via this script.
+Uses package names and ignores versions during operations.
+For import operation recommended to use files exported via this script.
 
 **Requires root privileges to run.**
 
