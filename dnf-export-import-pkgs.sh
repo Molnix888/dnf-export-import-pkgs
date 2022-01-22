@@ -38,8 +38,16 @@ import_pkgs() {
         local to_delete
         to_delete=$(grep -Fxvf "$1" "$actual")
 
-        dnf remove -y $to_delete
-        dnf --setopt=install_weak_deps=False install -y $(cat "$1")
+        for pkg in $to_delete; do
+            dnf remove -y "$pkg"
+        done
+
+        local to_install
+        to_install=$(cat "$1")
+
+        for pkg in $to_install; do
+            dnf --setopt=install_weak_deps=False install -y "$pkg"
+        done
 
         (rm "$actual" && echo "$actual successfully deleted.") || (echo "Error occurred during deletion of $actual." && exit 1)
     else
