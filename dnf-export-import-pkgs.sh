@@ -14,15 +14,15 @@ get_help() {
 
 pkg_list_to_file() {
     if [ -f "$1" ]; then
-        echo "File $1 already exists." && get_help
+        echo "$1 already exists." && get_help
     else
-        (dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i >"$1" && echo "Package list successfully exported to $1.") || (echo "Error occurred during export operation to $1." && exit 1)
+        (dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i >"$1" && echo "Package list successfully exported to $1.") || (echo "Error occurred during exporting to $1." && exit 1)
     fi
 }
 
 export_pkgs() {
     if [ -z "$1" ]; then
-        echo "Empty filepath provided." && get_help
+        echo "Empty filepath." && get_help
     else
         pkg_list_to_file "$1"
     fi
@@ -38,17 +38,17 @@ import_pkgs() {
         local to_delete
         to_delete=$(grep -Fxvf "$1" "$actual")
 
-        dnf remove "$to_delete"
-        dnf --setopt=install_weak_deps=False install "$(cat "$1")"
+        dnf remove -y $to_delete
+        dnf --setopt=install_weak_deps=False install -y $(cat "$1")
 
-        (rm "$actual" && echo "$actual file successfully deleted.") || (echo "Error occurred during delete operation of $actual file." && exit 1)
+        (rm "$actual" && echo "$actual successfully deleted.") || (echo "Error occurred during deletion of $actual." && exit 1)
     else
         echo "File not exists, not readable or is empty." && get_help
     fi
 }
 
 if [ $EUID -ne 0 ]; then
-    echo "Script requires root privileges." && exit 1
+    echo "Root privileges required." && exit 1
 fi
 
 while getopts "o:p:" opt; do
