@@ -30,7 +30,7 @@ export_pkgs() {
 
 # Compares 2 files returning lines absent in 1.
 get_delta() {
-    echo $(grep -Fxvf "$1" "$2")
+    grep -Fxvf "$1" "$2"
 }
 
 remove_file() {
