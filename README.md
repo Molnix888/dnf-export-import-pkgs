@@ -1,10 +1,10 @@
 # dnf-export-import-pkgs
 
-A script created to ease a process of restoring the same set of packages after
-system re-installation or for moving it to another system.
+A script created to ease a process of moving to a new system by restoring
+a set of predefined DNF packages.
 
 Uses package names and ignores versions during operations.
-For import operation recommended to use files exported via this script.
+Can use any text file with package names list for import operation.
 
 **Requires root privileges to run.**
 
