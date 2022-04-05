@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 get_help() {
     echo "Usage: sudo $0 [-o <export|import>] [-p <arg...>]
@@ -8,21 +9,19 @@ get_help() {
         import - Imports package names from plain text file and installs the same set of packages removing the ones not in the list.
 
 -p  Relative filepath, file shouldn't exist for export operation and should exist, be readable and not empty for import operation."
-
-    exit 1
 }
 
 pkg_list_to_file() {
     if [ -f "$1" ]; then
-        echo "$1 already exists."
+        echo "$1 already exists." && exit 1
     else
-        (dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i >"$1" && echo "Package list successfully exported to $1.") || (echo "Error occurred during exporting to $1." && exit 1)
+        dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i >"$1" && echo "Package list successfully exported to $1."
     fi
 }
 
 export_pkgs() {
     if [ -z "$1" ]; then
-        echo "Empty filepath."
+        echo "Empty filepath." && exit 1
     else
         pkg_list_to_file "$1"
     fi
@@ -34,7 +33,7 @@ get_delta() {
 }
 
 remove_file() {
-    (rm "$1" && echo "$1 successfully deleted.") || (echo "Error occurred during deletion of $1." && exit 1)
+    rm "$1" && echo "$1 successfully deleted."
 }
 
 import_pkgs() {
@@ -63,7 +62,7 @@ import_pkgs() {
 
         remove_file "$actual"
     else
-        echo "File not exists, not readable or is empty."
+        echo "File not exists, not readable or is empty." && exit 1
     fi
 }
 
@@ -86,5 +85,5 @@ elif [ "$operation" = "export" ]; then
 elif [ "$operation" = "import" ]; then
     import_pkgs "$path"
 else
-    echo "Invalid operation." && get_help
+    echo "Invalid operation." && get_help && exit 1
 fi
