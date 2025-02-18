@@ -2,88 +2,72 @@
 set -euo pipefail
 
 get_help() {
-    echo "Usage: sudo $0 [-o <export|import>] [-p <arg...>]
-
--o  Operation to perform, can either be export or import:
-        export - Exports names of installed packages (without version and architecture) to a plain text file.
-        import - Imports package names from plain text file and installs the same set of packages removing the ones not in the list.
-
--p  Relative filepath, file shouldn't exist for export operation and should exist, be readable and not empty for import operation."
+    echo "Usage: sudo $0 -o <export|import> -p <filepath>"
+    echo "\nOptions:"
+    echo "  -o  Operation:"
+    echo "        export - Save installed package names (excluding version/arch) to a file."
+    echo "        import - Install packages from a file and remove packages not listed."
+    echo "  -p  Filepath:"
+    echo "        For export, file must not exist."
+    echo "        For import, file must exist, be readable, and not be empty."
+    exit 1
 }
 
 pkg_list_to_file() {
-    if [ -f "$1" ]; then
-        echo "$1 already exists." && exit 1
-    else
-        dnf repoquery --installed | sort | grep -oP "(^.+)(?=-[\d]+:.+)" | uniq -i >"$1" && echo "Package list successfully exported to $1."
-    fi
+    local file="$1"
+    [ -e "$file" ] && { echo "Error: $file already exists."; exit 1; }
+    dnf repoquery --installed | awk -F '[:-]' '{print $1}' | sort -u > "$file"
+    echo "Package list exported to $file."
 }
 
-export_pkgs() {
-    if [ -z "$1" ]; then
-        echo "Empty filepath." && exit 1
-    else
-        pkg_list_to_file "$1"
-    fi
-}
-
-# Compares 2 files returning lines absent in 1.
 get_delta() {
-    grep -Fxvf "$1" "$2"
+    sort -u "$2" | grep -Fxv -f "$1"
 }
 
 remove_file() {
-    rm "$1" && echo "$1 successfully deleted."
+    rm -f "$1" && echo "Removed temporary file: $1."
+}
+
+export_pkgs() {
+    [ -z "$1" ] && { echo "Error: Empty filepath."; exit 1; }
+    pkg_list_to_file "$1"
 }
 
 import_pkgs() {
-    if [ -f "$1" ] && [ -r "$1" ] && [ -s "$1" ]; then
-        local actual
-        actual=$(uuidgen)
-
-        pkg_list_to_file "$actual"
-
-        local to_delete
-        to_delete=$(get_delta "$1" "$actual")
-
-        for pkg in $to_delete; do
-            dnf remove -y "$pkg"
-        done
-
-        remove_file "$actual"
-        pkg_list_to_file "$actual"
-
-        local to_install
-        to_install=$(get_delta "$actual" "$1")
-
-        for pkg in $to_install; do
-            dnf --setopt=install_weak_deps=False install -y "$pkg"
-        done
-
-        remove_file "$actual"
-    else
-        echo "File not exists, not readable or is empty." && exit 1
-    fi
+    local file="$1"
+    [ ! -r "$file" ] || [ ! -s "$file" ] && { echo "Error: File missing, unreadable, or empty."; exit 1; }
+    
+    local temp_list
+    temp_list=$(mktemp) || { echo "Error: Failed to create temporary file."; exit 1; }
+    trap 'rm -f "$temp_list"' EXIT
+    
+    pkg_list_to_file "$temp_list"
+    
+    mapfile -t to_delete < <(get_delta "$file" "$temp_list")
+    [ ${#to_delete[@]} -gt 0 ] && dnf remove -y "${to_delete[@]}"
+    
+    pkg_list_to_file "$temp_list"
+    
+    mapfile -t to_install < <(get_delta "$temp_list" "$file")
+    [ ${#to_install[@]} -gt 0 ] && dnf --setopt=install_weak_deps=False install -y "${to_install[@]}"
 }
 
-if [ $EUID -ne 0 ]; then
-    echo "Root privileges required." && exit 1
-fi
+[ "$EUID" -ne 0 ] && { echo "Error: Root privileges required."; exit 1; }
+
+operation=""
+path=""
 
 while getopts "o:p:" opt; do
     case "$opt" in
-    o) operation="$OPTARG" ;;
-    p) path="$OPTARG" ;;
-    ?) get_help ;;
+        o) operation="$OPTARG" ;;
+        p) path="$OPTARG" ;;
+        *) get_help ;;
     esac
 done
 
-if [ -z "$operation" ]; then
-    get_help
-elif [ "$operation" = "export" ]; then
-    export_pkgs "$path"
-elif [ "$operation" = "import" ]; then
-    import_pkgs "$path"
-else
-    echo "Invalid operation." && get_help && exit 1
-fi
+[ -z "$operation" ] && get_help
+case "$operation" in
+    export) export_pkgs "$path" ;;
+    import) import_pkgs "$path" ;;
+    *) echo "Error: Invalid operation."; get_help ;;
+esac
